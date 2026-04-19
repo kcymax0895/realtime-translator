@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     env:
       # Gradle 빌드 JVM 메모리 설정 (gradlew 파싱 문제 우회)
