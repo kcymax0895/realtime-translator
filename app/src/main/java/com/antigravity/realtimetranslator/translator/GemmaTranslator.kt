@@ -29,7 +29,6 @@ class GemmaTranslator(private val context: Context) {
                 .setModelPath(modelPath)
                 .setMaxTokens(1024)
                 .setMaxTopK(40)
-                .setTemperature(0.1f)   // 번역은 낮은 temperature 사용
                 .setRandomSeed(42)
                 .build()
 

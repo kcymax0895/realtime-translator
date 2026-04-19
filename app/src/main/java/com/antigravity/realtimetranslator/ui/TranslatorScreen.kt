@@ -318,7 +318,7 @@ private fun TextCard(
             color = labelColor.copy(alpha = borderAlpha)
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp), minIntrinsicHeight = 120) {
+        Column(modifier = Modifier.padding(16.dp).heightIn(min = 120.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     label,
