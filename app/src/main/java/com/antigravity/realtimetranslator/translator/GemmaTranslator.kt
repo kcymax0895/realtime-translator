@@ -29,7 +29,6 @@ class GemmaTranslator(private val context: Context) {
                 .setModelPath(modelPath)
                 .setMaxTokens(1024)
                 .setMaxTopK(40)
-                .setRandomSeed(42)
                 .build()
 
             llmInference = LlmInference.createFromOptions(context, options)
