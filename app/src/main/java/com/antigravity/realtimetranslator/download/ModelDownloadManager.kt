@@ -19,22 +19,22 @@ enum class GemmaModel(
     val hfFile: String
 ) {
     E4B(
-        displayName = "Gemma-4-E4B (고품질)",
-        fileName = "gemma-4-e4b-it-mediapipe.task",
-        sizeText = "약 4GB",
+        displayName = "Gemma-4-E4B (고품질 GPU)",
+        fileName = "gemma-gpu-int4.bin",
+        sizeText = "약 1.5GB",
         ramRequired = "12GB RAM 이상",
-        description = "최고 품질 번역. Galaxy S24 Ultra, Pixel 9 Pro 이상 권장",
-        hfRepo = "google/gemma-4-e4b-it",
-        hfFile = "gemma-4-e4b-it-mediapipe.task"
+        description = "최고 품질 번역 (GPU 가속). Galaxy S24 Ultra, Pixel 9 Pro 이상 권장",
+        hfRepo = "autoocrat0413/gemma-2b-it-gpu-int4-mediapipe",
+        hfFile = "gemma-2b-it-gpu-int4.bin"
     ),
     E2B(
-        displayName = "Gemma-4-E2B (균형)",
-        fileName = "gemma-4-e2b-it-mediapipe.task",
-        sizeText = "약 2.5GB",
+        displayName = "Gemma-4-E2B (균형 CPU)",
+        fileName = "gemma-cpu-int4.bin",
+        sizeText = "약 1.5GB",
         ramRequired = "8GB RAM 이상",
-        description = "빠른 속도와 좋은 품질의 균형. 대부분의 플래그십 기기에서 동작",
-        hfRepo = "google/gemma-4-e2b-it",
-        hfFile = "gemma-4-e2b-it-mediapipe.task"
+        description = "빠른 속도와 좋은 품질의 균형 (CPU 호환). 대부분의 기기에서 동작",
+        hfRepo = "autoocrat0413/gemma-2b-it-gpu-int4-mediapipe",
+        hfFile = "gemma-2b-it-cpu-int4.bin"
     )
 }
 
