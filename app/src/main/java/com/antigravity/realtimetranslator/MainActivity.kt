@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.antigravity.realtimetranslator.ui.ModelDownloadScreen
 import com.antigravity.realtimetranslator.ui.TranslatorScreen
 import com.antigravity.realtimetranslator.viewmodel.TranslatorViewModel
@@ -36,19 +37,14 @@ class MainActivity : ComponentActivity() {
                 )
             ) {
                 val uiState by viewModel.uiState.collectAsState()
-
-                // 화면 전환 상태
-                // "translator" (메인) | "download" (모델 다운로드)
                 var currentScreen by remember { mutableStateOf("translator") }
 
-                // 최초 실행: 모델이 없으면 다운로드 화면으로
                 LaunchedEffect(Unit) {
                     if (!uiState.isModelLoaded && uiState.downloadedModels.isEmpty()) {
                         currentScreen = "download"
                     }
                 }
 
-                // 마이크 권한
                 val micPermission = rememberPermissionState(
                     android.Manifest.permission.RECORD_AUDIO
                 )
@@ -75,12 +71,16 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "translator" }
                         )
                     }
-
-                    else -> { // "translator"
+                    else -> {
                         if (!micPermission.status.isGranted) {
-                            // 권한 없음 안내
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                Modifier.fillMaxSize().systemBarsPadding(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
                                     Text("마이크 권한이 필요합니다.", color = Color(0xFFE6EDF3))
                                     Button(onClick = { micPermission.launchPermissionRequest() }) {
                                         Text("권한 허용")
@@ -90,9 +90,9 @@ class MainActivity : ComponentActivity() {
                         } else {
                             TranslatorScreen(
                                 uiState = uiState,
-                                onStartListening = { viewModel.startListening() },
-                                onStopListening  = { viewModel.stopListening() },
-                                onSwapLanguages  = { viewModel.swapLanguages() },
+                                onStartListening  = { viewModel.startListening() },
+                                onStopListening   = { viewModel.stopListening() },
+                                onSwapLanguages   = { viewModel.swapLanguages() },
                                 onSourceLangChange = { viewModel.setSourceLang(it) },
                                 onTargetLangChange = { viewModel.setTargetLang(it) },
                                 onNavigateToSetup  = { currentScreen = "download" },
