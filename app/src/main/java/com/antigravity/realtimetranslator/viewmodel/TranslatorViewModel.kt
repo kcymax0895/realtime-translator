@@ -59,6 +59,10 @@ data class TranslatorUiState(
 
     // 오류
     val errorMessage: String? = null,
+
+    // AI 비서 모드
+    val assistantSummarizedText: String = "",
+    val isSummarizing: Boolean = false,
 )
 
 class TranslatorViewModel(application: Application) : AndroidViewModel(application) {
@@ -69,6 +73,7 @@ class TranslatorViewModel(application: Application) : AndroidViewModel(applicati
     private val speechManager = SpeechManager(application)
     private val gemmaTranslator = GemmaTranslator(application)
     private val downloadManager = ModelDownloadManager(application)
+    private val dataExtractor = com.antigravity.realtimetranslator.assistant.DataExtractorHelper(application)
 
     // 진행 중인 다운로드 ID 추적
     private val activeDownloads = mutableMapOf<GemmaModel, Long>()
@@ -260,6 +265,69 @@ class TranslatorViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun detectDownloadedModels(): Set<GemmaModel> =
         GemmaModel.entries.filter { downloadManager.isModelDownloaded(it) }.toSet()
+
+    // ──────────────────────────── AI 비서 (요약) ────────────────────────────
+
+    fun summarizeSms() {
+        if (!gemmaTranslator.isReady()) {
+            _uiState.value = _uiState.value.copy(errorMessage = "모델이 초기화되지 않았습니다.")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSummarizing = true, assistantSummarizedText = "최근 SMS 읽는 중...")
+            val messages = dataExtractor.getRecentSms(limit = 10)
+            if (messages.isEmpty()) {
+                _uiState.value = _uiState.value.copy(isSummarizing = false, assistantSummarizedText = "가져올 문자 메시지가 없습니다.")
+                return@launch
+            }
+            // 형식 제작
+            val sb = java.lang.StringBuilder()
+            messages.forEach { msg ->
+                sb.append("발신자: ${msg.sender}\n내용: ${msg.body.take(150)}\n---\n")
+            }
+            
+            _uiState.value = _uiState.value.copy(assistantSummarizedText = "문구 추출 완료. Gemma 분석 중...")
+            
+            val result = gemmaTranslator.summarize(
+                text = sb.toString(),
+                onPartialResult = { partial ->
+                    _uiState.value = _uiState.value.copy(assistantSummarizedText = partial)
+                }
+            )
+            _uiState.value = _uiState.value.copy(
+                isSummarizing = false,
+                assistantSummarizedText = result.getOrElse { "요약 실패: ${it.message}" }
+            )
+        }
+    }
+
+    fun summarizeFile(uri: android.net.Uri) {
+        if (!gemmaTranslator.isReady()) {
+            _uiState.value = _uiState.value.copy(errorMessage = "모델이 초기화되지 않았습니다.")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSummarizing = true, assistantSummarizedText = "파일 읽는 중...")
+            val fileContent = dataExtractor.readTextFile(uri)
+            if (fileContent.isBlank()) {
+                _uiState.value = _uiState.value.copy(isSummarizing = false, assistantSummarizedText = "파일 내용이 비어있거나 읽을 수 없습니다.")
+                return@launch
+            }
+            
+            _uiState.value = _uiState.value.copy(assistantSummarizedText = "해당 파일 내용 추출 완료. Gemma 분석 중...")
+            
+            val result = gemmaTranslator.summarize(
+                text = fileContent.take(3000), // 최대 3000자 제한
+                onPartialResult = { partial ->
+                    _uiState.value = _uiState.value.copy(assistantSummarizedText = partial)
+                }
+            )
+            _uiState.value = _uiState.value.copy(
+                isSummarizing = false,
+                assistantSummarizedText = result.getOrElse { "요약 실패: ${it.message}" }
+            )
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()

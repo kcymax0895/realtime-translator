@@ -100,6 +100,53 @@ class GemmaTranslator(private val context: Context) {
     }
 
     /**
+     * 텍스트 구조 요약 및 일정 추출 전문 프롬프트 구성
+     */
+    private fun buildSummarizePrompt(text: String): String {
+        return buildString {
+            append("<start_of_turn>user\n")
+            append("다음 수신된 메시지나 문서의 내용을 읽고 중요한 핵심 내용과 일정을 중심으로 3줄 이내로 한글로 요약해줘. 부가 설명은 생략할 것.\n\n")
+            append("내용:\n")
+            append(text)
+            append("\n<end_of_turn>\n")
+            append("<start_of_turn>model\n")
+        }
+    }
+
+    /**
+     * 비서 기반 문서 요약
+     */
+    suspend fun summarize(
+        text: String,
+        onPartialResult: ((String) -> Unit)? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val inference = llmInference ?: return@withContext Result.failure(
+            IllegalStateException("모델이 초기화되지 않았습니다.")
+        )
+        if (text.isBlank()) return@withContext Result.success("")
+
+        val prompt = buildSummarizePrompt(text)
+        try {
+            if (onPartialResult != null) {
+                val resultBuilder = StringBuilder()
+                inference.generateResponseAsync(prompt) { partialResult, done ->
+                    if (partialResult != null) {
+                        resultBuilder.append(partialResult)
+                        onPartialResult(resultBuilder.toString())
+                    }
+                }
+                val fullResult = inference.generateResponse(prompt)
+                Result.success(cleanTranslationOutput(fullResult))
+            } else {
+                val result = inference.generateResponse(prompt)
+                Result.success(cleanTranslationOutput(result))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * 모델 출력에서 불필요한 토큰/마커를 제거합니다.
      */
     private fun cleanTranslationOutput(raw: String): String {

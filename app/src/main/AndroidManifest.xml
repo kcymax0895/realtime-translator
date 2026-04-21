@@ -11,6 +11,9 @@
     <!-- 모델 다운로드 (HuggingFace) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- AI 비서 기능: SMS 읽기 권한 -->
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
         android:allowBackup="true"
